@@ -32,15 +32,15 @@ chop_world_video_trials(df, videofile = "6992c8a2_0.0-443.191.mp4")
 
 We can quickly visualize data from individual trials,
 ```
-plot_list <- df2 %>% group_by(trial) %>%
+plot_list <- df %>% group_by(trial) %>%
   group_map(~ ggplot(.x$imu[[1]], aes(timestamp, acceleration_z)) + geom_line())
 patchwork::wrap_plots(plot_list)
 
-plot_list = df2 %>% group_by(trial) %>%
+plot_list = df %>% group_by(trial) %>%
   group_map(~ ggplot(.x$gaze[[1]], aes(timestamp, elevation)) + geom_line())
 patchwork::wrap_plots(plot_list)
 
-plot_list = df2 %>% group_by(trial) %>%
+plot_list = df %>% group_by(trial) %>%
   group_map(~ ggplot(.x$eye_states[[1]], aes(timestamp, pupil_diameter)) + geom_line())
 patchwork::wrap_plots(plot_list)
 ```
