@@ -4,6 +4,9 @@
 #' "imu", "world_timestamps"
 #'
 #' @return readr-compatible cols() definition
+#' @importFrom readr cols
+#' @importFrom readr col_character
+#' @importFrom readr col_double
 #' @export
 #'
 #' @examples
@@ -126,9 +129,10 @@ clean_names <- function(names) {
 #'
 #' @param filename
 #' @param convert_time_cols Convert columns with timestamps to POSIXct (default TRUE)
-#' @param clean_names Clean column names
+#' @param clean_names Clean column names (default TRUE)
 #'
 #' @return
+#' @importFrom dplyr mutate
 #' @export
 #'
 #' @examples
@@ -162,6 +166,9 @@ read_csv_file <- function(filename,
 #' @param ...
 #'
 #' @return
+#' @importFrom tidyr pivot_wider
+#' @importFrom dplyr bind_rows
+#' @importFrom dplyr rename
 #' @export
 #'
 #' @examples
@@ -177,7 +184,7 @@ read_exported_dir <- function(path,
     varnames = names(df)
     to_nest = varnames[!varnames %in% c("recording_id")]
 
-    df %<>% nest(data = all_of(to_nest))
+    df %<>% tidyr::nest(data = all_of(to_nest))
 
     DAT[[name]] <- df
   }
@@ -187,4 +194,12 @@ read_exported_dir <- function(path,
 
   if ("3d_eye_states" %in% names(df))
     df %<>% rename(eye_states = `3d_eye_states`)
+
+  if ("world_timestamps" %in% names(df)) {
+    df$world_timestamps[[1]] %<>% mutate(
+      time_from_frame1 = difftime(timestamp, timestamp[1], units = "sec")
+    )
+  }
+
+  return(df)
 }

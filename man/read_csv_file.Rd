@@ -9,7 +9,7 @@ read_csv_file(filename, convert_time_cols = T, clean_names = T)
 \arguments{
 \item{convert_time_cols}{Convert columns with timestamps to POSIXct (default TRUE)}
 
-\item{clean_names}{Clean column names}
+\item{clean_names}{Clean column names (default TRUE)}
 }
 \description{
 read_csv_file: Read a single Neon exported csv file

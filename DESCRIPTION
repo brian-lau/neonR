@@ -6,8 +6,14 @@ Authors@R:
            comment = c(ORCID = "0000-0001-8615-8244"))
 Description: Read and organize data from Pupil Labs Neon.
 Imports:
-    tidyverse,
+    dplyr,
     magrittr,
+    tidyr,
+    tibble,
+    stringr,
+    readr,
+    anytime,
+    lubridate
 License: use_mit_license()
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
