@@ -34,6 +34,7 @@ NeonR <- function(
 #'
 #' @examples
 print.neonr <- function(x){
-  print(x[["data"]])
-  #return(obj$data$gaze)
+  str(x)
+  #print(x[["data"]])
+  #return(obj)
 }

@@ -4,10 +4,22 @@
 \alias{chop_trials}
 \title{chop_trials: Chop continuous recording into trials}
 \usage{
-chop_trials(df, start_postfix = ".begin", end_postfix = ".end")
+chop_trials(
+  obj,
+  start_postfix = ".begin",
+  end_postfix = ".end",
+  pre_time = lubridate::seconds(0),
+  post_time = lubridate::seconds(0)
+)
 }
 \arguments{
-\item{df}{}
+\item{start_postfix}{String defining trial start event}
+
+\item{end_postfix}{String defining trial end event}
+
+\item{pre_time}{Time to pad start of trial}
+
+\item{post_time}{Time to pad end of trial}
 }
 \description{
 chop_trials: Chop continuous recording into trials
