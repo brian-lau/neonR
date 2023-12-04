@@ -1,6 +1,6 @@
 #' chop_trials: Chop continuous recording into trials
 #'
-#' @param df
+#' @param obj
 #'
 #' @return
 #' @importFrom tidyr pivot_wider pivot_longer separate
@@ -9,54 +9,61 @@
 #' @export
 #'
 #' @examples
-chop_trials <- function(df,
+chop_trials <- function(obj,
                         start_postfix = ".begin",
                         end_postfix = ".end"
 ) {
   # Trial tags start with number
-  trial_events <- df$events[[1]] %>%
+  trial_events <- obj[["data"]]$events[[1]] %>%
     select(-type) %>%
     filter(grepl("^[[:digit:]]+", name))
 
   # TODO check postfixes
 
-  trial_events %<>% separate(name, c("trial", "event"))
+  trial_events %<>% tidyr::separate(name, c("trial", "event"))
   trial_events %<>% pivot_wider(names_from = event, values_from = timestamp)
 
   # TODO verify start and end for each trial
+  has_trials <- TRUE
 
-  if ("blinks" %in% names(df)) {
-    df$blinks[[1]] %<>% pivot_longer(cols = ends_with("timestamp"),
-                                    names_to = "event",
-                                    values_to = "timestamp")
-  }
+  if (has_trials) {
+    if ("blinks" %in% names(obj[["data"]])) {
+      obj[["data"]]$blinks[[1]] %<>% pivot_longer(cols = ends_with("timestamp"),
+                                                  names_to = "event",
+                                                  values_to = "timestamp")
+    }
 
-  if ("fixations" %in% names(df)) {
-    df$fixations[[1]] %<>% pivot_longer(cols = ends_with("timestamp"),
-                                     names_to = "event",
-                                     values_to = "timestamp")
-  }
+    if ("fixations" %in% names(obj[["data"]])) {
+      obj[["data"]]$fixations[[1]] %<>% pivot_longer(cols = ends_with("timestamp"),
+                                                     names_to = "event",
+                                                     values_to = "timestamp")
+    }
 
-  chopper <- function(x, y) {
-    excluded_vars <- c("recording_id")
-    y %<>% mutate(
-      across(
-        -one_of(excluded_vars),
-        ~ list(.x[[1]] %>% filter(timestamp >= x$begin, timestamp <= x$end))
+    chopper <- function(x, y) {
+      excluded_vars <- c("recording_id")
+      y %<>% mutate(
+        across(
+          -one_of(excluded_vars),
+          ~ list(.x[[1]] %>% filter(timestamp >= x$begin, timestamp <= x$end))
+        )
       )
-    )
-    y %>% mutate(begin = x$begin,
-                 end = x$end,
-                 .after = recording_id)
+      y %>% mutate(begin = x$begin,
+                   end = x$end,
+                   .after = recording_id)
+    }
+
+    obj[["data"]] <- trial_events %>%
+      group_by(trial) %>%
+      group_modify(~ chopper(.x, obj[["data"]]), .keep = T) %>%
+      ungroup() %>%
+      relocate(trial, .after = recording_id)
+
+    # TODO repivot blinks & fixations
+
+    obj$has_trials <- TRUE
   }
 
-  trial_events %>%
-    group_by(trial) %>%
-    group_modify(~ chopper(.x, df), .keep = T) %>%
-    ungroup() %>%
-    relocate(trial, .after = recording_id)
-
-  # TODO repivot blinks & fixations
+  return(obj)
 }
 
 #' chop_world_video_trials: Chop world (scene) video into trials

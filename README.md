@@ -9,6 +9,8 @@ devtools::install_github("brian-lau/neonR")
 ## Usage
 If you have a data directory containing exported raw data from Pupil Cloud,
 ```
+library(neonR)
+
 df = read_exported_dir("~/Downloads/raw-data-export/2023-11-27_16-26-05-e99365cf")
 ```
 This will produce a tibble containing data from the various .csv files that get exported (e.g., gaze.csv, imu.csv, etc). Each separate file lives inside a column, which is a another nested tibble. This is a list, so you can access gaze data as follows
@@ -25,7 +27,8 @@ where we can now access data for each trial,
 df[1,]$gaze[[1]]
 ```
 
-There is also a helper that splits the corresponding world (scene) video into trials,
+
+If you have [`ffmpeg`](https://ffmpeg.org/) here is also a helper that splits the corresponding world (scene) video into trials,
 ```
 chop_world_video_trials(df, videofile = "6992c8a2_0.0-443.191.mp4")
 ```

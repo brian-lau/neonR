@@ -108,7 +108,7 @@ csv_col_defs <- function(name) {
   )
 }
 
-#' clean_names: Clean up column names
+#' clean_csv_names: Clean up column names
 #'
 #' @param names Column names to clean
 #'
@@ -116,7 +116,7 @@ csv_col_defs <- function(name) {
 #' @export
 #'
 #' @examples
-clean_names <- function(names) {
+clean_csv_names <- function(names) {
   names <- gsub("\\.", "_", make.names(names))
   stringr::str_replace_all(
     names,
@@ -140,9 +140,8 @@ read_csv_file <- function(filename,
                           convert_time_cols = T,
                           clean_names = T
 ) {
-  name <- gsub(".csv", "", filename)
-  df <- readr::read_csv(filename,
-                        col_types = csv_col_defs(name))
+  name <- gsub(".csv", "", basename(filename))
+  df <- readr::read_csv(filename, col_types = csv_col_defs(name))
 
   varnames <- names(df)
 
@@ -155,7 +154,7 @@ read_csv_file <- function(filename,
       df %<>% mutate(`duration [ms]` = lubridate::dmilliseconds(`duration [ms]`))
   }
 
-  if (clean_names) names(df) <- clean_names(varnames)
+  if (clean_names) names(df) <- clean_csv_names(varnames)
 
   return(df)
 }
@@ -172,20 +171,18 @@ read_csv_file <- function(filename,
 #' @export
 #'
 #' @examples
-read_exported_dir <- function(path,
+read_exported_dir <- function(path = ".",
                               ...
 ) {
-  files <- list.files(pattern = "\\.csv$")
+  path <- normalizePath(path)
+  files <- list.files(path = path, pattern = "\\.csv$", full.names = F)
 
   DAT <- list()
   for (f in files) {
-    df <- read_csv_file(f)
+    df <- read_csv_file(file.path(path, f, ...))
+    df %<>% tidyr::nest(data = !any_of(c("recording_id")))
+
     name <- gsub(".csv", "", f)
-    varnames = names(df)
-    to_nest = varnames[!varnames %in% c("recording_id")]
-
-    df %<>% tidyr::nest(data = all_of(to_nest))
-
     DAT[[name]] <- df
   }
 
@@ -201,5 +198,24 @@ read_exported_dir <- function(path,
     )
   }
 
-  return(df)
+  # Setup output
+  obj <- NeonR()
+
+  obj[["data"]] <- df
+
+  f <- list.files(path = path, pattern = "info.json")
+  if (f == "info.json") {
+    obj[["info"]] <- tidyjson::read_json(file.path(path, "info.json")) %>%
+      tidyjson::spread_all() %>%
+      tibble::as_tibble()
+  }
+
+  f <- list.files(path = path, pattern = "scene_camera.json")
+  if (f == "scene_camera.json") {
+    obj[["scene_camera"]] <- tidyjson::read_json(file.path(path, "scene_camera.json")) %>%
+      tidyjson::spread_all() %>%
+      tibble::as_tibble()
+  }
+
+  return(obj)
 }

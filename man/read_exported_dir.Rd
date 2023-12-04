@@ -4,7 +4,7 @@
 \alias{read_exported_dir}
 \title{read_exported_dir: Read all Neon exported csv files in directory}
 \usage{
-read_exported_dir(path, ...)
+read_exported_dir(path = ".", ...)
 }
 \arguments{
 \item{...}{}
