@@ -4,11 +4,16 @@
 \alias{chop_world_video_trials}
 \title{chop_world_video_trials: Chop world (scene) video into trials}
 \usage{
-chop_world_video_trials(df, videofile, trial = NULL, overwrite = T, silent = T)
+chop_world_video_trials(
+  obj,
+  videofile,
+  save_dir = fs::path_dir(videofile),
+  trial = NULL,
+  overwrite = T,
+  silent = T
+)
 }
 \arguments{
-\item{df}{A trial-based neon_data object}
-
 \item{videofile}{Name of video file}
 
 \item{trial}{TODO}
@@ -16,6 +21,8 @@ chop_world_video_trials(df, videofile, trial = NULL, overwrite = T, silent = T)
 \item{overwrite}{Overwrite existing files (default = TRUE)}
 
 \item{silent}{Ignore stdout of ffmpeg call (default = TRUE)}
+
+\item{df}{A trial-based neon_data object}
 }
 \description{
 chop_world_video_trials: Chop world (scene) video into trials

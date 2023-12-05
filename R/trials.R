@@ -24,8 +24,8 @@ chop_trials <- function(obj,
 
   # Trial tags start with number
   trial_events <- obj$data$events[[1]] %>%
-    select(-type) %>%
-    filter(grepl("^[[:digit:]]+", name))
+    dplyr::select(-type) %>%
+    dplyr::filter(grepl("^[[:digit:]]+", name))
 
   # TODO check postfixes and matching begin/end
 
@@ -72,7 +72,9 @@ chop_trials <- function(obj,
       group_by(trial) %>%
       group_modify(~ chopper(.x, obj$data), .keep = T) %>%
       ungroup() %>%
-      relocate(trial, .after = recording_id)
+      mutate(trial = as.integer(trial)) %>%
+      relocate(trial, .after = recording_id) %>%
+      dplyr::arrange(trial)
 
     # TODO repivot blinks & fixations
 
@@ -94,8 +96,9 @@ chop_trials <- function(obj,
 #' @export
 #'
 #' @examples
-chop_world_video_trials <- function(df,
+chop_world_video_trials <- function(obj,
                              videofile,
+                             save_dir = fs::path_dir(videofile),
                              trial = NULL,
                              overwrite = T,
                              silent = T
@@ -104,17 +107,19 @@ chop_world_video_trials <- function(df,
   #               "-show_entries stream=nb_read_packets -of csv=p=0 ", videofile)
   # n_total_frames <- system(call, intern = TRUE) %>% as.numeric()
 
-  name <- gsub(".mp4", "", videofile)
+  name <- gsub(".mp4", "", basename(videofile))
 
-  for (trial in 1:nrow(df)) {
-    t_start <- df[trial,]$world_timestamps[[1]]$time_from_frame1[1] %>% as.numeric()
-    n_frames <- length(df[trial,]$world_timestamps[[1]]$time_from_frame1)
+  for (trial in 1:nrow(obj$data)) {
+    t_start <- obj$data[trial,]$world_timestamps[[1]]$time_from_frame1[1] %>%
+      as.numeric()
+    n_frames <- length(obj$data[trial,]$world_timestamps[[1]]$time_from_frame1)
+
     call = paste0("ffmpeg -ss ", round(t_start, 2),
                   " -i ", videofile,
                   " -codec copy",
                   " -frames:v ", n_frames, " ",
                   ifelse(overwrite, " -y ", " -n "),
-                  paste0(name, "_trial_", df[trial,]$trial, ".mp4")
+                  file.path(save_dir, paste0(name, "_trial_", obj$data[trial,]$trial, ".mp4"))
                   )
     #print(call)
     system(call, ignore.stderr = silent)

@@ -14,7 +14,8 @@ Imports:
     readr,
     anytime,
     lubridate,
-    tidyjson
+    tidyjson,
+    fs
 License: use_mit_license()
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
