@@ -97,31 +97,40 @@ chop_trials <- function(obj,
 #'
 #' @examples
 chop_world_video_trials <- function(obj,
-                             videofile,
-                             save_dir = fs::path_dir(videofile),
-                             trial = NULL,
+                             save_dir = NULL,
                              overwrite = T,
                              silent = T
 ) {
-  # call <- paste0("ffprobe -v error -select_streams v:0 -count_packets ",
-  #               "-show_entries stream=nb_read_packets -of csv=p=0 ", videofile)
-  # n_total_frames <- system(call, intern = TRUE) %>% as.numeric()
+  stopifnot(obj$has_trials)
 
-  name <- gsub(".mp4", "", basename(videofile))
+  videofile <- obj$world_videofile
+  if (is.null(save_dir))
+    save_dir <- file.path(fs::path_dir(videofile), "chopped_video")
+
+  if (!dir.exists(save_dir))
+    dir.create(save_dir)
+
+  # Use the start of the section hash as basename for segments
+  name <- sub("\\_.*", "", basename(videofile))
 
   for (trial in 1:nrow(obj$data)) {
     t_start <- obj$data[trial,]$world_timestamps[[1]]$time_from_frame1[1] %>%
       as.numeric()
     n_frames <- length(obj$data[trial,]$world_timestamps[[1]]$time_from_frame1)
+    t_end <- obj$data[trial,]$world_timestamps[[1]]$time_from_frame1[n_frames] %>%
+      as.numeric()
 
-    call = paste0("ffmpeg -ss ", round(t_start, 2),
+    fname <- paste0(name, "_", round(t_start, 2), "-", round(t_end,2),
+                    "_trial_", obj$data[trial,]$trial, ".mp4")
+
+    call <- paste0("ffmpeg -ss ", round(t_start, 2),
                   " -i ", videofile,
                   " -codec copy",
                   " -frames:v ", n_frames, " ",
                   ifelse(overwrite, " -y ", " -n "),
-                  file.path(save_dir, paste0(name, "_trial_", obj$data[trial,]$trial, ".mp4"))
+                  file.path(save_dir, fname)
                   )
-    #print(call)
+
     system(call, ignore.stderr = silent)
   }
 }

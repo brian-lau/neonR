@@ -201,21 +201,29 @@ read_exported_dir <- function(path = ".",
   # Setup output
   obj <- NeonR()
 
-  obj[["data"]] <- df
+  obj$data <- df
 
   f <- list.files(path = path, pattern = "info.json")
   if (f == "info.json") {
-    obj[["info"]] <- tidyjson::read_json(file.path(path, "info.json")) %>%
+    obj$info <- tidyjson::read_json(file.path(path, "info.json")) %>%
       tidyjson::spread_all() %>%
       tibble::as_tibble()
   }
 
   f <- list.files(path = path, pattern = "scene_camera.json")
   if (f == "scene_camera.json") {
-    obj[["scene_camera"]] <- tidyjson::read_json(file.path(path, "scene_camera.json")) %>%
+    obj$scene_camera <- tidyjson::read_json(file.path(path, "scene_camera.json")) %>%
       tidyjson::spread_all() %>%
       tibble::as_tibble()
   }
+
+  # TODO check if only video, unclear if always single video exported
+  f <- list.files(path = path, pattern = "\\.mp4$", full.names = F)
+  obj$world_videofile <- file.path(path, f)
+  # "ffprobe -i <file> -show_entries format=duration -v quiet -of csv="p=0""
+  # call <- paste0("ffprobe -v error -select_streams v:0 -count_packets ",
+  #               "-show_entries stream=nb_read_packets -of csv=p=0 ", videofile)
+  # n_total_frames <- system(call, intern = TRUE) %>% as.numeric()
 
   return(obj)
 }

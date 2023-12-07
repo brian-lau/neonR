@@ -10,6 +10,7 @@ NeonR <- function(
     info         = tibble::tibble(),
     scene_camera = tibble::tibble(),
     sections     = tibble::tibble(),
+    world_videofile = list(),
     has_trials   = FALSE,
     data         = tibble::tibble()
   )
